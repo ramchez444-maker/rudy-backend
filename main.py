@@ -1,24 +1,12 @@
 from fastapi import FastAPI
-import google.generativeai as genai
+from google import genai
 import os
 import random
 
 app = FastAPI()
 
-# Configure Gemini API key
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-
-def get_active_model_name():
-    """Finds the first available text-generation model from Google API."""
-    try:
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                # Return the full model name string
-                return m.name
-    except Exception:
-        pass
-    # Fallback default
-    return "models/gemini-2.5-flash"
+# Initialize Google GenAI client with environment key
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 @app.get("/")
 def home():
@@ -32,12 +20,11 @@ def chat(prompt: str):
             "Separate line 1 and line 2 with a '|' symbol. Example: Hello!|I am Rudy!"
         )
         
-        # Dynamically fetch an active model
-        active_model = get_active_model_name()
-        model = genai.GenerativeModel(active_model)
-        
-        full_prompt = f"{system_instruction}\nUser prompt: {prompt}"
-        response = model.generate_content(full_prompt)
+        # Calls the current active Gemini Flash model
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=f"{system_instruction}\nUser prompt: {prompt}"
+        )
         
         raw_text = response.text.strip().replace("\n", " ")
         
