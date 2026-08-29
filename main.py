@@ -20,14 +20,15 @@ def chat(prompt: str):
             "Separate line 1 and line 2 with a '|' symbol. Example: Hello!|I am Rudy!"
         )
         
-        # Calls the current active Gemini Flash model
+        # Uses the latest active Flash model alias automatically
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-flash-latest",
             contents=f"{system_instruction}\nUser prompt: {prompt}"
         )
         
         raw_text = response.text.strip().replace("\n", " ")
         
+        # Split text for 16x2 LCD
         if "|" in raw_text:
             parts = raw_text.split("|", 1)
             line1 = parts[0][:16]
