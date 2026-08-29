@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from google import genai
+from google.genai import types
 import os
 import random
 
 app = FastAPI()
 
-# Initialize Google GenAI client with environment key
+# Initialize official GenAI client with environment key
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 @app.get("/")
@@ -15,20 +16,25 @@ def home():
 @app.get("/chat")
 def chat(prompt: str):
     try:
-        system_instruction = (
+        sys_instruct = (
             "You are Rudy, a helpful animatronic pet dog. Keep responses UNDER 30 characters total. "
             "Separate line 1 and line 2 with a '|' symbol. Example: Hello!|I am Rudy!"
         )
         
-        # Uses the latest active Flash model alias automatically
+        # Use gemini-2.5-flash with official types configuration
         response = client.models.generate_content(
-            model="gemini-flash-latest",
-            contents=f"{system_instruction}\nUser prompt: {prompt}"
+            model="gemini-2.5-flash",
+            contents=f"User prompt: {prompt}",
+            config=types.GenerateContentConfig(
+                system_instruction=sys_instruct,
+                max_output_tokens=60,
+                temperature=0.7,
+            )
         )
         
         raw_text = response.text.strip().replace("\n", " ")
         
-        # Split text for 16x2 LCD
+        # Split text into Line 1 and Line 2 for 16x2 LCD
         if "|" in raw_text:
             parts = raw_text.split("|", 1)
             line1 = parts[0][:16]
